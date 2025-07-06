@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  devconnect:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    container_name: devconnect-app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    environment:
+      - NODE_END=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.devconnect.rule=Host(`localhost`)"
+      - "traefik.http.services.devconnect.loadbalancer.server.port=80"
+
+networks:
+  default:
+    name: devconnect-network
