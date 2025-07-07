@@ -1,28 +1,26 @@
-# Stage 1: Build the Angular application
-FROM node:18-alpine AS builder
+# Use Node to build and serve the app
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Install dependencies
+# Copy package files
 COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
-# Copy app source and build
+# Copy the rest of the source code
 COPY . .
+
+# Build the Vite app
 RUN npm run build
 
-# Stage 2: NGINX to serve the app
-FROM nginx:alpine
+# Install a lightweight HTTP server to serve static files
+RUN npm install -g serve
 
-# Copy custom nginx config if needed (optional)
-# COPY nginx.conf /etc/nginx/nginx.conf
+# Expose port (optional, for reference)
+EXPOSE 3000
 
-# Adjust this path based on your Angular project name
-COPY --from=builder /app/dist/your-app-name /usr/share/nginx/html
-
-EXPOSE 80
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
-
-CMD ["nginx", "-g", "daemon off;"]
+# Start the server to serve the built app
+CMD ["serve", "-s", "dist", "-l", "3000"]
