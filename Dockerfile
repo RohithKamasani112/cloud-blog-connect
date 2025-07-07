@@ -9,7 +9,7 @@ RUN npm install
 
 # Copy app source and build
 COPY . .
-RUN npm run build --configuration production
+RUN npm run build
 
 # Stage 2: NGINX to serve the app
 FROM nginx:alpine
