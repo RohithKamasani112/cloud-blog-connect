@@ -1,38 +1,28 @@
-# DevConnect - Multi-stage Docker build for production deployment
+# Stage 1: Build the Angular application
+FROM node:18-alpine AS builder
 
-# Stage 1: Build the application
-FROM node:18-alpine as builder
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
-RUN npm ci --only=production
+COPY package*.json ./
+RUN npm install
 
-# Copy source code
+# Copy app source and build
 COPY . .
+RUN npm run build --configuration production
 
-# Build the application
-RUN npm run build
-
-# Stage 2: Serve the application with nginx
+# Stage 2: NGINX to serve the app
 FROM nginx:alpine
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy custom nginx config if needed (optional)
+# COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Adjust this path based on your Angular project name
+COPY --from=builder /app/dist/your-app-name /usr/share/nginx/html
 
-# Expose port 80
 EXPOSE 80
 
-# Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost/ || exit 1
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
